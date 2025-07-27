@@ -5,7 +5,6 @@ project(CKFont LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_TEST_CKFONT "Enable cktext test target." OFF)
-option(USE_LINK_LZ4XX ON)
 
 if(MSVC)
     add_compile_options(/utf-8)
