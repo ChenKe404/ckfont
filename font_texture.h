@@ -1,7 +1,7 @@
-#ifndef CK_FONT_DRAWER_SPRITE_H
-#define CK_FONT_DRAWER_SPRITE_H
+#ifndef CK_FONT_TEXTURE_H
+#define CK_FONT_TEXTURE_H
 
-#include "drawer.h"
+#include "font.h"
 
 namespace ck
 {
@@ -11,12 +11,14 @@ class FontTexture
 public:
     struct Char : public Font::Char
     {
-        uint8_t page;   // 字符所在的纹理页
-        int x, y;       // 字符的起始纹理坐标(左上角原点)
+        uint8_t page = 0;   // 字符所在的纹理页
+        int x = 0, y = 0;   // 字符的起始纹理坐标(左上角原点)
     };
     using CharList = std::vector<Char>;
     using CharPtrList = std::vector<const Char*>;
 public:
+    FontTexture();
+
     const Char& c(char32_t chr) const;
     CharPtrList cs(const char* str) const;
     CharPtrList cs(const wchar_t* str) const;
@@ -25,12 +27,7 @@ public:
     CharPtrList css(const std::wstring& str) const;
     CharPtrList css(const std::u32string& str) const;
 
-    void setCharset(const CharList& cs);
-    void setCharset(CharList&& cs);
-    const CharList& charset() const;
-
-    void setPages(const std::vector<void*>& pages);
-    void setPages(std::vector<void*>&& pages);
+    const CharList& chrs() const;
     const std::vector<void*>& pages() const;
 
     void clear();
@@ -38,7 +35,7 @@ private:
     std::map<char32_t,Char*> _map;
     CharList _chrs;
     std::vector<void*> _pages;
-    Char _sp;   // 缺省空格字符
+    friend class FontTextureCreator;
 };
 
 // 创建字体纹理

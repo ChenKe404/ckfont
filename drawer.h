@@ -57,8 +57,7 @@ struct FontDrawer
     };
 
     // 设置当前使用的字体
-    virtual void setFont(Font*);
-    Font* font();
+    virtual void setFont(const Font*);
     const Font* font() const;
 
     // 设置混合颜色, alpha通道表示颜色的混合强度
@@ -128,7 +127,7 @@ struct FontDrawer
     // @box 字符要绘制的位置和字符的宽高
     virtual void perchar(int x, int y, const Font::Char* chr, const Font::DataPtr& d) const = 0;
 protected:
-    Font* _font = nullptr;
+    const Font* _font = nullptr;
     color _mix = 0;
 };
 

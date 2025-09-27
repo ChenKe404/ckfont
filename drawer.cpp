@@ -65,11 +65,8 @@ inline static void draw_line(
     }
 }
 
-void FontDrawer::setFont(Font * fnt)
+void FontDrawer::setFont(const Font * fnt)
 { _font = fnt; }
-
-Font* FontDrawer::font()
-{ return _font; }
 
 const Font *FontDrawer::font() const
 { return _font; }

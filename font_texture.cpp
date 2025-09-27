@@ -1,4 +1,4 @@
-#include "drawer_sprite.h"
+#include "font_texture.h"
 
 namespace ck
 {
@@ -25,9 +25,7 @@ inline FontTexture::CharPtrList __cs(const FontTexture &f,const C* str)
 }
 
 FontTexture::FontTexture()
-{
-    _sp.code = ' ';
-}
+{}
 
 const FontTexture::Char &FontTexture::c(char32_t c) const
 {
@@ -40,10 +38,7 @@ const FontTexture::Char &FontTexture::c(char32_t c) const
     auto iter = _map.find(c);
     if(iter == _map.end())
     {
-        if(c == ' ')
-            return _sp;
-        else
-            return _chrs.front();
+        return _chrs.front();
     }
     return *iter->second;
 }
@@ -78,39 +73,9 @@ FontTexture::CharPtrList FontTexture::css(const std::u32string &str) const
     return __cs<char32_t>(*this,str.c_str());
 }
 
-void FontTexture::setCharset(const CharList &cs)
-{
-    _chrs = cs;
-    _map.clear();
-    for(auto& c : _chrs)
-    {
-        _map[c.code] = &c;
-    }
-}
-
-void FontTexture::setCharset(CharList &&cs)
-{
-    _chrs = std::forward<CharList>(cs);
-    _map.clear();
-    for(auto& c : _chrs)
-    {
-        _map[c.code] = &c;
-    }
-}
-
-const FontTexture::CharList &FontTexture::charset() const
+const FontTexture::CharList &FontTexture::chrs() const
 {
     return _chrs;
-}
-
-void FontTexture::setPages(const std::vector<void *> &pages)
-{
-    _pages = pages;
-}
-
-void FontTexture::setPages(std::vector<void *> &&pages)
-{
-    _pages = std::forward<std::vector<void *>>(pages);
 }
 
 const std::vector<void *> &FontTexture::pages() const
@@ -152,6 +117,9 @@ inline int find_yoffset(
     return oy;
 }
 
+////////////////////////////////////////
+/// FontTextureCreator
+
 FontTextureCreator::FontTextureCreator(
     uint32_t width,
     uint32_t height,
@@ -170,9 +138,7 @@ bool FontTextureCreator::start(
 {
     out.clear();
     const auto& chrs = fnt->chrs();
-    CharList out_chrs;
-    out_chrs.reserve(chrs.size());
-    std::vector<void*> out_pages;
+    out._chrs.reserve(chrs.size());
 
     int page = 0;
     uint32_t left = _spacing,top = _spacing;
@@ -203,7 +169,7 @@ bool FontTextureCreator::start(
         auto bottom = top + c.height + _spacing;
         if(bottom > _height)
         {
-            out_pages.push_back(texture);
+            out._pages.push_back(texture);
             if(std::next(i) != chrs.rend())
                 texture = newTexture();     // 新页
             else    // 有可能最后一页刚好放下最后一个字
@@ -220,18 +186,22 @@ bool FontTextureCreator::start(
         chr.x = left;
         chr.y = top;
         perchar(fnt,chr,fnt->getData(c),texture);
-        out_chrs.emplace_back(chr);
+        out._chrs.emplace_back(chr);
 
         yo_cur.emplace_back(yoffset{left,right,bottom});
         left = right;
     }
-    out_chrs.shrink_to_fit();
-    if(!out_chrs.empty() && texture)    // 最后一页
-        out_pages.push_back(texture);
+    out._chrs.shrink_to_fit();
+    if(!out._chrs.empty() && texture)    // 最后一页
+        out._pages.push_back(texture);
 
-    out.setCharset(std::move(out_chrs));
-    out.setPages(std::move(out_pages));
-    return !out_chrs.empty();
+    out._map.clear();
+    for(auto& c : out._chrs)
+    {
+        out._map[c.code] = &c;
+    }
+
+    return !out._chrs.empty();
 }
 
 }
