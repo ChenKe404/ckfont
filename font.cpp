@@ -32,9 +32,9 @@ using Char = Font::Char;
 using CharList = Font::CharList;
 using CharPtrList = Font::CharPtrList;
 
-constexpr Char LT { '\t' };
-constexpr Char L0 { '\0' };
-constexpr Char LN { '\n' };
+static constexpr Char LT { '\t' };
+static constexpr Char L0 { '\0' };
+static constexpr Char LN { '\n' };
 
 // 计算data起始地址
 inline uint32_t address_start(const CharList& chrs)

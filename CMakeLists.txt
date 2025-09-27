@@ -17,6 +17,7 @@ add_library(ckfont STATIC
     font.cpp
     fnt_adapter.h fnt_adapter.cpp
     drawer.h drawer.cpp
+    drawer_sprite.h drawer_sprite.cpp
 )
 target_include_directories(ckfont PUBLIC
     . 3rd/include
