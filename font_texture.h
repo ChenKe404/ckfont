@@ -51,16 +51,22 @@ public:
         uint8_t spacing     // 字符间隔
         );
 
+    // 估算可以容纳下全部字符的正方形纹理的宽度
+    static int estimate(
+        const Font& fnt,
+        uint8_t spacing
+        );
+
     // 开始转换
     bool start(
-        const Font* fnt,  // 字体
+        const Font& fnt,  // 字体
         FontTexture& out
         );
 
     // 请求创建新纹理
     virtual void* newTexture() = 0;
 
-    virtual void perchar(const Font* fnt,const Char&, const Font::DataPtr &d, void* texture) const = 0;
+    virtual void perchar(const Font& fnt,const Char&, const Font::DataPtr &d, void* texture) const = 0;
 protected:
     uint32_t _width, _height;
     uint8_t _spacing;

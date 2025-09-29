@@ -120,6 +120,14 @@ inline int find_yoffset(
 ////////////////////////////////////////
 /// FontTextureCreator
 
+class __EstimateFontTextureCreator__ : public FontTextureCreator
+{
+    using FontTextureCreator::FontTextureCreator;
+public:
+    void *newTexture() override { return (void*)0xffffffff; }
+    void perchar(const Font &, const Char &, const Font::DataPtr &, void *) const override {}
+};
+
 FontTextureCreator::FontTextureCreator(
     uint32_t width,
     uint32_t height,
@@ -131,13 +139,61 @@ FontTextureCreator::FontTextureCreator(
         _spacing = 1;
 }
 
+int FontTextureCreator::estimate(
+    const Font &fnt,
+    uint8_t spacing
+    )
+{
+    auto increment = fnt.header().maxWidth;
+    int width = 0;  // 起始宽度
+    {
+        uint64_t area = 0;
+        for(auto& it : fnt.chrs())
+        {
+            area += (it.width + spacing) * (it.height + spacing);
+        }
+        width = int(sqrt(area));
+    }
+    if(width < 1)
+        return 0;
+
+    int last_n = 0;
+    FontTexture ft;
+    while (true){
+        __EstimateFontTextureCreator__ eftc(width,width,spacing);
+        eftc.start(fnt,ft);
+        const auto n = ft._pages.size();
+        if(n < 1)
+            return 0;
+
+        if(last_n > 1 && n == 1)    // 这次能一页放下
+        {
+            if(increment < 2)
+                return width;
+            else
+                increment /= 2;
+        }
+        else if(last_n == 1 && n != 1 && increment > 2)  // 上次能一页放下
+            increment /= 2;
+
+        if(n > 1)
+            width += increment;
+        else
+            width -= increment;
+
+        last_n = n;
+    }
+
+    return width;
+}
+
 bool FontTextureCreator::start(
-    const Font * fnt,
+    const Font & fnt,
     FontTexture& out
     )
 {
     out.clear();
-    const auto& chrs = fnt->chrs();
+    const auto& chrs = fnt.chrs();
     out._chrs.reserve(chrs.size());
 
     int page = 0;
@@ -185,7 +241,7 @@ bool FontTextureCreator::start(
         chr.page = page;
         chr.x = left;
         chr.y = top;
-        perchar(fnt,chr,fnt->getData(c),texture);
+        perchar(fnt,chr,fnt.getData(c),texture);
         out._chrs.emplace_back(chr);
 
         yo_cur.emplace_back(yoffset{left,right,bottom});
