@@ -230,7 +230,7 @@ private:
     fn_to_color to_color;
 
     Header _header;
-    std::map<char32_t,Char*> _map;
+    std::unordered_map<char32_t,Char*> _map;
     CharList _chrs;
     std::vector<uint8_t> _data;
     Char _sp;   // 缺省空格字符
