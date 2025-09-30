@@ -1,7 +1,38 @@
 #include "font_texture.h"
+#include <algorithm>
 
 namespace ck
 {
+
+// 比目标整数大的最小2次幂数
+inline uint32_t number_pow2_greater(uint32_t v)
+{
+    uint32_t rt = 1;
+    while(rt < v) {
+        rt *= 2;
+    }
+    return rt;
+}
+
+// 比目标整数小的最大2次幂数
+inline uint32_t number_pow2_lesser(uint32_t v)
+{
+    uint32_t rt = number_pow2_greater(v);
+    auto lv = rt / 2;
+    if(lv > 1)
+        return lv;
+    return rt;
+}
+
+// 取离目标整数最近的2次幂数
+inline uint32_t number_pow2(uint32_t v)
+{
+    uint32_t rt = number_pow2_greater(v);
+    auto lv = rt / 2;
+    if(lv > 1 && v-lv < rt-v)
+        return lv;
+    return rt;
+}
 
 ////////////////////////////////////////
 /// FontTexture
@@ -120,12 +151,29 @@ inline int find_yoffset(
 ////////////////////////////////////////
 /// FontTextureCreator
 
-class __EstimateFontTextureCreator__ : public FontTextureCreator
+class __EstimateFontTextureCreator : public FontTextureCreator
 {
-    using FontTextureCreator::FontTextureCreator;
 public:
-    void *newTexture() override { return (void*)0xffffffff; }
-    void perchar(const Font &, const Char &, const Font::DataPtr &, void *) const override {}
+    struct info
+    {
+        int width = 0;
+        int count = 0;  // 页数
+        int remain_area = 0;    // 最后一页剩下的面积
+        float remain_ratio = 0;   // 最后一页剩下面积的比例
+    };
+public:
+    using FontTextureCreator::FontTextureCreator;
+    void *newTexture() override {
+        inf.count++;
+        inf.remain_area = 0;
+        inf.remain_ratio = 0;
+        return (void*)0xffffffff;
+    }
+    void perchar(const Font &, const Char & c, const Font::DataPtr &, void *) override {
+        inf.remain_area += (c.width + _spacing) * (c.height + _spacing);
+    }
+
+    info inf;
 };
 
 FontTextureCreator::FontTextureCreator(
@@ -160,7 +208,7 @@ int FontTextureCreator::estimate(
     int last_n = 0;
     FontTexture ft;
     while (true){
-        __EstimateFontTextureCreator__ eftc(width,width,spacing);
+        __EstimateFontTextureCreator eftc(width,width,spacing);
         eftc.start(fnt,ft);
         const auto n = ft._pages.size();
         if(n < 1)
@@ -185,6 +233,41 @@ int FontTextureCreator::estimate(
     }
 
     return width;
+}
+
+int FontTextureCreator::estimate(
+    const Font &fnt,
+    uint8_t spacing,
+    uint32_t min_width,
+    uint32_t max_width
+    )
+{
+    using info = __EstimateFontTextureCreator::info;
+
+    if(max_width < min_width)
+        std::swap(min_width, max_width);
+    min_width = number_pow2(min_width);
+    max_width = number_pow2(max_width);
+
+    FontTexture ft;
+    std::vector<info> infos;
+    for(auto w = min_width; w <= max_width; w *= 2)
+    {
+        __EstimateFontTextureCreator eftc(w,w,spacing);
+        eftc.start(fnt,ft);
+        eftc.inf.width = w;
+        eftc.inf.remain_area = w * w - eftc.inf.remain_area;
+        eftc.inf.remain_ratio = eftc.inf.remain_area / double(w * w);
+        infos.push_back(eftc.inf);
+    }
+
+    std::sort(infos.begin(),infos.end(),[](auto& a,auto& b){
+        return a.remain_ratio < b.remain_ratio;
+    });
+
+    if(!infos.empty())
+        return infos.front().width;
+    return min_width;
 }
 
 bool FontTextureCreator::start(
