@@ -209,12 +209,12 @@ struct Font
     // 清除所有字符
     void clear();
 
+    // 读取字体文件
+    bool open(const std::string& filename);
     // 保存字体文件
     bool save(const std::string& filename,bool compress = false);
     // 从适配器读取字体
     bool load(const Adapter&);
-    // 读取字体文件
-    bool load(const std::string& filename);
     // 从输入流读取字体
     bool load(std::istream& si);
     // 从内存读取字体
