@@ -67,7 +67,7 @@ public:
         );
 
     // 开始转换
-    bool start(
+    virtual bool start(
         const Font& fnt,  // 字体
         FontTexture& out
         );
