@@ -317,6 +317,15 @@ private:
     ctx_compress* _ctx = nullptr;
 };
 
+bool Font::open(const std::string& filename)
+{
+    std::ifstream fi(filename, std::ios::binary);
+    if (!fi) return false;
+    auto ret = load(fi);
+    fi.close();
+    return ret;
+}
+
 bool Font::save(const std::string &filename,bool compress)
 {
     std::ofstream fo(filename,std::ios::binary);
@@ -485,15 +494,6 @@ bool Font::load(const Adapter& adp)
         _data.clear();
         return false;
     }
-}
-
-bool Font::load(const std::string &filename)
-{
-    std::ifstream fi(filename,std::ios::binary);
-    if(!fi) return false;
-    auto ret = load(fi);
-    fi.close();
-    return ret;
 }
 
 template<typename Rd>
