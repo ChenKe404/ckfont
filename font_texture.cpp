@@ -309,10 +309,7 @@ bool FontTextureCreator::start(
         if(bottom > _height)
         {
             out._pages.push_back(texture);
-            if(std::next(i) != chrs.rend())
-                texture = newTexture();     // 新页
-            else    // 有可能最后一页刚好放下最后一个字
-                texture = nullptr;
+            texture = newTexture();     // 新页
             ++page;
             yo_last = {{ 0,_width,_spacing }};
             yo_cur.clear();
